@@ -8,7 +8,9 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <time.h>
+#include <MainWindow.h>
 
+#include "mainwindow.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -17,6 +19,7 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       currentMode(ORDER_MODE),
+      volumnState(UNMUTE),
      ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
@@ -34,11 +37,68 @@ MainWindow::MainWindow(QWidget *parent)
     musicLogic();
 
 
+    connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::handleMusicPositionChanged);
+
+    connect(player, &QMediaPlayer::durationChanged, this, &MainWindow::handleDurationChanged);
+
+    ui->pushButton_volumn->setIcon(QIcon(":/image/image/btn_Volume.png"));
+
+    // 隐藏音量条
+    volumnWidget = ui->widget_volumn;
+//    volumnWidget->hide();
+    volumnWidget->show();
+
+    // 为按钮安装事件过滤器
+    volumnButton = ui->pushButton_volumn;
+
+//    volumnButton->installEventFilter(this);
+//    volumnButton->setAttribute(Qt::WA_Hover);
+
+    QSlider* volumnSlider = ui->slider_volumn;
+    connect(volumnSlider, &QSlider::valueChanged, this, [=](int value) {
+        player->setVolume(value);
+        ui->volume->setText(QString::number(value));
+    });
+
+    connect(volumnButton, &QPushButton::clicked, this, &MainWindow::volumnControl);
+
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::handleMusicPositionChanged(qint64 position)
+{
+    QSlider *slider = ui->slider;
+    slider->setValue(position);
+
+    QString currentTime = formatTime(position);
+    ui->label_curTime->setText(currentTime);
+}
+
+void MainWindow::handleDurationChanged(qint64 duration)
+{
+    QSlider *slider = ui->slider;
+    slider->setRange(0, duration);
+    QString sumTime = formatTime(duration);
+    ui->label_sumTime->setText(sumTime);
+}
+
+void MainWindow::volumnControl()
+{
+    if (volumnState == UNMUTE)
+    {
+        volumnState = MUTE;
+        ui->pushButton_volumn->setIcon(QIcon(":/image/image/btn_noVolume.png"));
+        player->setVolume(0);
+    }else
+    {
+        volumnState = UNMUTE;
+        ui->pushButton_volumn->setIcon(QIcon(":/image/image/btn_Volume.png"));
+        player->setVolume(30);
+    }
 }
 
 void MainWindow::initMediaPlay()
@@ -95,7 +155,10 @@ void MainWindow::musicLogic()
         if (player->state() == QMediaPlayer::PausedState || player->state() == QMediaPlayer::StoppedState)
         {
             qDebug() << "开始播放";
-            loadSong();
+//            loadSong();
+            player->play();
+//            volumnWidget->show();
+            playPauseButton->setIcon(QIcon("F:\\MusicPlayer\\MusicPlayer\\image\\btn_playing.png"));
         }
         else
         {
@@ -217,6 +280,34 @@ void MainWindow::playNextPrevSong()
 
         loadSong();
     });
+}
+
+QString MainWindow::formatTime(qint64 milliseconds)
+{
+    if (milliseconds <= 0) return "00:00";
+
+    qint64 totalSeconds = milliseconds / 1000;
+    qint64 minutes = totalSeconds / 60;
+    qint64 seconds = totalSeconds % 60;
+
+    // 格式化时间为 mm:ss
+    return QString("%1:%2")
+        .arg(minutes, 2, 10, QChar('0'))
+        .arg(seconds, 2, 10, QChar('0'));
+}
+
+bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
+    if (obj == volumnButton) {
+        if (event->type() == QEvent::HoverEnter) {
+            volumnWidget->show();
+            return true;
+        }
+        else if (event->type() == QEvent::HoverLeave) {
+            volumnWidget->hide();
+            return true;
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
 }
 
 
