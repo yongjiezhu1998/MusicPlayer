@@ -1,0 +1,40 @@
+<RCC>
+    <qresource prefix="/image">
+        <file>image/btn_closeMainWindow_50.png</file>
+        <file>image/btn_closeMainWindow_100.png</file>
+        <file>image/btn_CurrentItemInLoop_50.png</file>
+        <file>image/btn_CurrentItemInLoop_100.png</file>
+        <file>image/btn_dressUp_50.png</file>
+        <file>image/btn_dressUp_100.png</file>
+        <file>image/btn_fullscreen_50.png</file>
+        <file>image/btn_fullscreen_100.png</file>
+        <file>image/btn_Loop_50.png</file>
+        <file>image/btn_Loop_100.png</file>
+        <file>image/btn_messageCenter_50.png</file>
+        <file>image/btn_messageCenter_100.png</file>
+        <file>image/btn_minimize_50.png</file>
+        <file>image/btn_minimize_100.png</file>
+        <file>image/btn_miniMode_50.png</file>
+        <file>image/btn_miniMode_100.png</file>
+        <file>image/btn_noVolume.png</file>
+        <file>image/btn_pausing.png</file>
+        <file>image/btn_playing.png</file>
+        <file>image/btn_playNext_50.png</file>
+        <file>image/btn_playNext_100.png</file>
+        <file>image/btn_playPrev_50.png</file>
+        <file>image/btn_playPrev_100.png</file>
+        <file>image/btn_Random_50.png</file>
+        <file>image/btn_Random_100.png</file>
+        <file>image/btn_search_50.png</file>
+        <file>image/btn_search_100.png</file>
+        <file>image/btn_settings_50.png</file>
+        <file>image/btn_settings_100.png</file>
+        <file>image/btn_Volume.png</file>
+        <file>image/like_r_50.png</file>
+        <file>image/like_r_100.png</file>
+        <file>image/like_w_50.png</file>
+        <file>image/like_w_100.png</file>
+        <file>image/logo.png</file>
+        <file>image/windowIcon.png</file>
+    </qresource>
+</RCC>
