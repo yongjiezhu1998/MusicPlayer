@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <time.h>
 #include <MainWindow.h>
+#include <QTimer>
 
 #include "mainwindow.h"
 #include "mainwindow.h"
@@ -45,22 +46,30 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 隐藏音量条
     volumnWidget = ui->widget_volumn;
-//    volumnWidget->hide();
-    volumnWidget->show();
+    volumnWidget->hide();
+//    volumnWidget->show();
 
     // 为按钮安装事件过滤器
     volumnButton = ui->pushButton_volumn;
 
-//    volumnButton->installEventFilter(this);
-//    volumnButton->setAttribute(Qt::WA_Hover);
+    volumnButton->installEventFilter(this);
+    volumnButton->setAttribute(Qt::WA_Hover);
 
-    QSlider* volumnSlider = ui->slider_volumn;
+    volumnSlider = ui->slider_volumn;
     connect(volumnSlider, &QSlider::valueChanged, this, [=](int value) {
         player->setVolume(value);
         ui->volume->setText(QString::number(value));
+        currentVolumn = value;
     });
 
     connect(volumnButton, &QPushButton::clicked, this, &MainWindow::volumnControl);
+
+
+    // 拖动进度条调整播放位置，释放时播放音乐
+    connect(ui->slider, &QSlider::sliderReleased, [=]() {
+       player->setPosition(ui->slider->value());
+    });
+
 
 }
 
@@ -93,11 +102,15 @@ void MainWindow::volumnControl()
         volumnState = MUTE;
         ui->pushButton_volumn->setIcon(QIcon(":/image/image/btn_noVolume.png"));
         player->setVolume(0);
+        ui->volume->setText(QString::number(0)+"%");
+        volumnSlider->setValue(0);
     }else
     {
         volumnState = UNMUTE;
         ui->pushButton_volumn->setIcon(QIcon(":/image/image/btn_Volume.png"));
-        player->setVolume(30);
+        player->setVolume(currentVolumn);
+        ui->volume->setText(QString::number(currentVolumn)+"%");
+        volumnSlider->setValue(currentVolumn);
     }
 }
 
@@ -298,13 +311,15 @@ QString MainWindow::formatTime(qint64 milliseconds)
 
 bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
     if (obj == volumnButton) {
-        if (event->type() == QEvent::HoverEnter) {
+        if (event->type() == QEvent::Enter) {
             volumnWidget->show();
             return true;
         }
-        else if (event->type() == QEvent::HoverLeave) {
-            volumnWidget->hide();
-            return true;
+        else if (event->type() == QEvent::Leave) {
+            // 延迟300ms隐藏（避免移入音量窗口时立即关闭）
+            QTimer::singleShot(300, [this]{
+                if (!volumnWidget->underMouse()) volumnWidget->hide();
+            });
         }
     }
     return QMainWindow::eventFilter(obj, event);

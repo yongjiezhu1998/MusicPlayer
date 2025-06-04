@@ -10,13 +10,18 @@ CONFIG += c++11
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    musicsliderwidget.cpp \
+    slider.cpp
 
 HEADERS += \
-    mainwindow.h
+    mainwindow.h \
+    musicsliderwidget.h \
+    slider.h
 
 FORMS += \
-    mainwindow.ui
+    mainwindow.ui \
+    musicsliderwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -48,6 +48,8 @@ private:
     QString filePath;
     QWidget* volumnWidget;
     QPushButton* volumnButton;
+    QSlider* volumnSlider;
+    int currentVolumn = 30;
 
 
     void initMediaPlay();
