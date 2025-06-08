@@ -8,13 +8,31 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <time.h>
-#include <MainWindow.h>
 #include <QTimer>
+#include <QMediaPlaylist>
+#include <QTimer>
+#include <QPropertyAnimation>
 
 #include "mainwindow.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+/*
+ * TODO:
+ *  - 双击切换音乐 ok
+ *  - 歌词与歌曲绑定 ok
+ *  - 专辑封面转动
+ *  - 歌词滚动
+ *  - 暂停播放缓入缓出
+ *  - 歌词和音乐绑定，切割自动波切换
+ *  - 用户登录界面（数据库）
+*/
+
+/*
+ * Learning list:
+ *  - lamda表达式
+ *  - 各种构造函数
+*/
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -37,6 +55,24 @@ MainWindow::MainWindow(QWidget *parent)
 
     musicLogic();
 
+    connect(player, &QMediaPlayer::mediaChanged, [=](const QMediaContent &media) {
+        QString musicPath = media.canonicalUrl().toLocalFile(); // 获取媒体文件的本地路径
+
+        QString lrcPath = getLyricsPath(musicPath);
+
+        if (QFile::exists(lrcPath))
+        {
+            lrcMap = loadLRC();
+            ui->lyricLabel->show();
+            qDebug() << "有歌词";
+        }
+        else
+        {
+            ui->lyricLabel->hide();
+            ui->lyricLabel->setText("未找到歌词文件");
+            qDebug() << "无歌词";
+        }
+    });
 
     connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::handleMusicPositionChanged);
 
@@ -47,7 +83,6 @@ MainWindow::MainWindow(QWidget *parent)
     // 隐藏音量条
     volumnWidget = ui->widget_volumn;
     volumnWidget->hide();
-//    volumnWidget->show();
 
     // 为按钮安装事件过滤器
     volumnButton = ui->pushButton_volumn;
@@ -55,8 +90,7 @@ MainWindow::MainWindow(QWidget *parent)
     volumnButton->installEventFilter(this);
     volumnButton->setAttribute(Qt::WA_Hover);
 
-    volumnSlider = ui->slider_volumn;
-    connect(volumnSlider, &QSlider::valueChanged, this, [=](int value) {
+    connect(ui->slider_volumn, &QSlider::valueChanged, this, [=](int value) {
         player->setVolume(value);
         ui->volume->setText(QString::number(value));
         currentVolumn = value;
@@ -70,6 +104,14 @@ MainWindow::MainWindow(QWidget *parent)
        player->setPosition(ui->slider->value());
     });
 
+    connect(musicList, &QListWidget::itemDoubleClicked, this, [=](QListWidgetItem *item){
+        int index = musicList->row(item);
+
+        playList->setCurrentIndex(index);
+
+        player->play();
+        playPauseButton->setIcon(QIcon("F:\\MusicPlayer\\MusicPlayer\\image\\btn_playing.png"));
+    });
 
 }
 
@@ -78,6 +120,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+/*
+ * @brife:槽函数，处理音乐播放时进度条变化以及歌词的滚动
+*/
 void MainWindow::handleMusicPositionChanged(qint64 position)
 {
     QSlider *slider = ui->slider;
@@ -85,6 +130,40 @@ void MainWindow::handleMusicPositionChanged(qint64 position)
 
     QString currentTime = formatTime(position);
     ui->label_curTime->setText(currentTime);
+
+    showLrc(position);
+}
+
+/*
+ * @brife:展示歌词
+*/
+void MainWindow::showLrc(qint64 position)
+{
+    auto it = lrcMap.lowerBound(position);
+
+    // 处理第一句歌词的特殊情况
+    if (it == lrcMap.begin() && position >= it.key()) {
+        // 当前时间处于第一句歌词范围内，直接显示
+        ui->lyricLabel->setText(it.value());
+    }
+    // 处理超过最后一句歌词的情况
+    else if (it == lrcMap.end() && !lrcMap.isEmpty()) {
+        // 显示最后一句歌词
+        auto lastIt = --lrcMap.end();
+        ui->lyricLabel->setText(lastIt.value());
+    }
+    // 正常歌词行处理
+    else if (it != lrcMap.end()) {
+        // 回退到实际显示的歌词行
+        if (it != lrcMap.begin() && it.key() > position) {
+            --it;
+        }
+        ui->lyricLabel->setText(it.value());
+    }
+    // 无歌词可显示的情况
+    else {
+        ui->lyricLabel->clear();
+    }
 }
 
 void MainWindow::handleDurationChanged(qint64 duration)
@@ -112,6 +191,14 @@ void MainWindow::volumnControl()
         ui->volume->setText(QString::number(currentVolumn)+"%");
         volumnSlider->setValue(currentVolumn);
     }
+}
+
+/*
+ * @brife: 更新歌词槽函数
+*/
+void MainWindow::updateLyrics(qint64 position)
+{
+
 }
 
 void MainWindow::initMediaPlay()
@@ -168,14 +255,13 @@ void MainWindow::musicLogic()
         if (player->state() == QMediaPlayer::PausedState || player->state() == QMediaPlayer::StoppedState)
         {
             qDebug() << "开始播放";
-//            loadSong();
             player->play();
-//            volumnWidget->show();
             playPauseButton->setIcon(QIcon("F:\\MusicPlayer\\MusicPlayer\\image\\btn_playing.png"));
         }
         else
         {
             qDebug() << "暂停";
+
             player->pause();
             playPauseButton->setIcon(QIcon("F:\\MusicPlayer\\MusicPlayer\\image\\btn_pausing.png"));
         }
@@ -217,6 +303,10 @@ void MainWindow::loadMusic()
 {
     filePath = "F:\\MusicPlayer\\MusicPlayer\\music";
 
+    playList = new QMediaPlaylist(player);
+
+    player->setPlaylist(playList);
+
     QDir dir(filePath);
 
     if (dir.exists() == false)
@@ -227,13 +317,15 @@ void MainWindow::loadMusic()
 
     QFileInfoList fileList = dir.entryInfoList(QDir::Files);
 
+
     for (auto element : fileList)
     {
         if (element.suffix() == "mp3")
         {
             musicList->addItem(element.baseName());
+            QString filePath = element.absoluteFilePath();
+            playList->addMedia(QUrl::fromLocalFile(filePath));
         }
-
     }
 }
 
@@ -325,4 +417,70 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event) {
     return QMainWindow::eventFilter(obj, event);
 }
 
+QMap<qint64, QString> MainWindow::loadLRC()
+{
+    QMap<qint64, QString> lrcMap = {};
+    // 读取lrc文件
+    QFile file("F:\\MusicPlayer\\MusicPlayer\\music\\林俊杰 - 交换余生.lrc");
 
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        return lrcMap;
+    }
+
+    QTextStream in(&file);
+
+
+
+    // 逐行解析并提取时间标签
+    QString line;
+    while (!in.atEnd()) {
+        line = in.readLine();
+        if (!line.startsWith('['))
+        {
+            continue;
+        }
+
+        QRegularExpression re("\\[(\\d{2}:\\d{2}\\.[0-9]{3})\\](.*)");
+        QRegularExpressionMatch match = re.match(line);
+        if (match.hasMatch()) {
+            QString time = match.captured(1);
+            QString text = match.captured(2);
+
+            // 将时间字符串拆分为分钟、秒、毫秒
+            QStringList parts = time.split(":");
+            if (parts.size() < 2) continue;
+
+            bool ok;
+            int minutes = parts[0].toInt(&ok);
+            if (!ok) continue;
+
+            QStringList secParts = parts[1].split('.');
+            if (secParts.size() < 2) continue;
+
+            int seconds = secParts[0].toInt(&ok); // 提取秒
+            if (!ok) continue;
+            int milliseconds = secParts[1].toInt(&ok); // 提取毫秒
+            if (!ok) continue;
+
+            qint64 totalMs = minutes * 60000 + seconds * 1000 + milliseconds;
+
+            lrcMap.insert(totalMs, text);
+        }
+    }
+
+    file.close();
+
+    return lrcMap;
+
+
+
+}
+
+
+// 获取歌词路径
+QString MainWindow::getLyricsPath(const QString &musicPath)
+{
+    QFileInfo musicInfo(musicPath);
+    return musicInfo.absolutePath() + "/" + musicInfo.completeBaseName() + ".lrc";
+}

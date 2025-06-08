@@ -35,6 +35,7 @@ private slots:
     void handleMusicPositionChanged(qint64 position);
     void handleDurationChanged(qint64 duration);
     void volumnControl();
+    void updateLyrics(qint64 position);
 
 private:
     Ui::MainWindow *ui;
@@ -50,6 +51,8 @@ private:
     QPushButton* volumnButton;
     QSlider* volumnSlider;
     int currentVolumn = 30;
+    QMap<qint64, QString> lrcMap;
+    QMediaPlaylist *playList;
 
 
     void initMediaPlay();
@@ -61,5 +64,8 @@ private:
     void playNextPrevSong();
     QString formatTime(qint64 milliseconds);
     bool eventFilter(QObject *obj, QEvent *event);
+    QMap<qint64, QString> loadLRC();
+    void showLrc(qint64 position);
+    QString getLyricsPath(const QString &musicPath);
 };
 #endif // MAINWINDOW_H
