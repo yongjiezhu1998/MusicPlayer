@@ -12,15 +12,25 @@
 #include <QMediaPlaylist>
 #include <QTimer>
 #include <QPropertyAnimation>
+#include <QStackedLayout>
+//#include <QEqualizerFilter>
+
+#include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
+#include <libavcodec/avcodec.h>
 
 #include "mainwindow.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "eq.h"
+#include "picturewidget.h"
+
 
 /*
  * TODO:
  *  - 双击切换音乐 ok
  *  - 歌词与歌曲绑定 ok
+ *  - 均衡器
  *  - 专辑封面转动
  *  - 歌词滚动
  *  - 暂停播放缓入缓出
@@ -30,7 +40,7 @@
 
 /*
  * Learning list:
- *  - lamda表达式
+ *  - lamda表达式 ok
  *  - 各种构造函数
 */
 
@@ -43,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // 初始化UI
     initUi();
 
     initMediaPlay();
@@ -112,6 +123,9 @@ MainWindow::MainWindow(QWidget *parent)
         player->play();
         playPauseButton->setIcon(QIcon("F:\\MusicPlayer\\MusicPlayer\\image\\btn_playing.png"));
     });
+
+
+
 
 }
 
@@ -235,6 +249,31 @@ void MainWindow::loadSong()
 */
 void MainWindow::initUi()
 {
+    // 初始化图标
+    QLabel* label = ui->label_title;
+    QPixmap pixmap(":/image/image/logo.png");
+    pixmap = pixmap.scaled(120,120,Qt::KeepAspectRatio); // 缩放尺寸
+
+    // 设置标签
+    label->setPixmap(pixmap);
+
+    // 滚动条相关设计
+    setListT1();
+    setListT2();
+    setListT3();
+    // 窗口界面标题
+    setTabWidget();
+
+    setPictureWall();
+
+    setAddWidget();
+
+
+    // 设置软件名称以及图标
+    this->setWindowTitle("网易云音乐-beta版");
+    this->setWindowIcon(QIcon(":/image/image/windowIcon.png"));
+
+
     playPauseButton =  ui->pushButton_playPause;
     playPauseButton->setIcon(QIcon("F:\\MusicPlayer\\MusicPlayer\\image\\btn_pausing.png"));
 
@@ -245,6 +284,108 @@ void MainWindow::initUi()
 
     musicList = ui->musicList;
 }
+
+/*
+ * @brife: 滚动条初始化T1
+*/
+void MainWindow::setListT1()
+{
+    // 取消滚动条
+    ui->listT1_2->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->listT1_2->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+    QListWidgetItem *findMusic = new QListWidgetItem(ui->listT1_2);
+    findMusic->setText("发现音乐");
+    QListWidgetItem *podcast = new QListWidgetItem(ui->listT1_2);
+    podcast->setText("播客");
+    QListWidgetItem *video = new QListWidgetItem(ui->listT1_2);
+    video->setText("视频");
+    QListWidgetItem *friends = new QListWidgetItem(ui->listT1_2);
+    friends->setText("朋友");
+    QListWidgetItem *live = new QListWidgetItem(ui->listT1_2);
+    live->setText("直播");
+    QListWidgetItem *pcFM = new QListWidgetItem(ui->listT1_2);
+    pcFM->setText("私人FM");
+}
+
+/*
+ * @brife:滚动条初始化T2
+*/
+void MainWindow::setListT2()
+{
+    ui->listT2_2->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->listT2_2->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    QListWidgetItem *localDownload = new QListWidgetItem(ui->listT2_2);
+    localDownload->setIcon(QIcon("./images/下载.png"));
+    localDownload->setText("本地与下载");
+
+    QListWidgetItem *recentPlay = new QListWidgetItem(ui->listT2_2);
+    recentPlay->setIcon(QIcon("./images/最近播放.png"));
+    recentPlay->setText("最近播放");
+
+    QListWidgetItem *myMusic = new QListWidgetItem(ui->listT2_2);
+    myMusic->setIcon(QIcon("./images/云盘.png"));
+    myMusic->setText("我的音乐云盘");
+
+    QListWidgetItem *myPodcast = new QListWidgetItem(ui->listT2_2);
+    myPodcast->setIcon(QIcon("./images/播客.png"));
+    myPodcast->setText("我的播客");
+
+    QListWidgetItem *myCollect = new QListWidgetItem(ui->listT2_2);
+    myCollect->setIcon(QIcon("./images/收藏.png"));
+    myCollect->setText("我的收藏");
+}
+
+/*
+ * @brife:滚动条初始化T3
+*/
+void MainWindow::setListT3()
+{
+    ui->listT3_2->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->listT3_2->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    QListWidgetItem *myLove = new QListWidgetItem(ui->listT3_2);
+    myLove->setIcon(QIcon("./images/心.png"));
+    myLove->setText("我喜欢的音乐");
+
+}
+
+/*
+ * @brife:初始化tablewidget
+*/
+void MainWindow::setTabWidget()
+{
+    ui->tabWidget->setTabText(0,"个性推荐");
+    ui->tabWidget->setTabText(1,"专属定制");
+    ui->tabWidget->setTabText(2,"歌单");
+    ui->tabWidget->setTabText(3,"排行榜");
+    ui->tabWidget->setTabText(4,"歌手");
+    ui->tabWidget->setTabText(5,"最新音乐");
+}
+
+/*
+ * @brife:初始化照片墙
+*/
+void MainWindow::setPictureWall()
+{
+    pictureWidget = new PictureWidget();
+    ui->verLout_pic_3->addWidget(pictureWidget);
+}
+
+/*
+ * @brife:设置歌曲
+*/
+void MainWindow::setAddWidget()
+{
+   pCourier = new NewCourier;
+   pDisMusic = new NewDisc;
+   QStackedLayout *stackedLayout = new QStackedLayout;
+   stackedLayout->addWidget(pCourier);
+   stackedLayout->addWidget(pDisMusic);
+   pCourier->move(0,0);
+   ui->verAddWidget_3->addLayout(stackedLayout);
+   stackedLayout->setCurrentIndex(0);
+}
+
 
 /*
  * @brife: 音乐播放相关逻辑
@@ -484,3 +625,12 @@ QString MainWindow::getLyricsPath(const QString &musicPath)
     QFileInfo musicInfo(musicPath);
     return musicInfo.absolutePath() + "/" + musicInfo.completeBaseName() + ".lrc";
 }
+
+void MainWindow::on_pushButton_clicked()
+{
+    qDebug() << "打开均衡器";
+    Eq *eq = new Eq();
+    eq->setAttribute(Qt::WA_DeleteOnClose); // 关闭时自动销毁
+    eq->show();
+}
+

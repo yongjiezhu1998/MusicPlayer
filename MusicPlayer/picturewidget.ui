@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PictureWidget</class>
+ <widget class="QWidget" name="PictureWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>778</width>
+    <height>244</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QPushButton" name="btnL">
+   <property name="geometry">
+    <rect>
+     <x>31</x>
+     <y>91</y>
+     <width>25</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnR">
+   <property name="geometry">
+    <rect>
+     <x>721</x>
+     <y>91</y>
+     <width>25</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>761</width>
+     <height>225</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout_2">
+    <item>
+     <widget class="pictureView" name="graphicsView_2"/>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic0_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic1_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic2_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic3_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic4_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic5_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic6_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic7_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic8_2" native="true"/>
+      </item>
+      <item>
+       <widget class="pictureButton" name="btnPic9_2" native="true"/>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>pictureView</class>
+   <extends>QGraphicsView</extends>
+   <header>pictureview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>pictureButton</class>
+   <extends>QWidget</extends>
+   <header>picturebutton.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

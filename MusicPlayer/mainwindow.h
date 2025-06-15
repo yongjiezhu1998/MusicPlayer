@@ -6,6 +6,10 @@
 #include <QPushButton>
 #include <QListWidget>
 
+#include "picturewidget.h"
+#include "newcourier.h"
+#include "newdisc.h"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -37,6 +41,8 @@ private slots:
     void volumnControl();
     void updateLyrics(qint64 position);
 
+    void on_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QMediaPlayer *player;
@@ -53,7 +59,9 @@ private:
     int currentVolumn = 30;
     QMap<qint64, QString> lrcMap;
     QMediaPlaylist *playList;
-
+    PictureWidget *pictureWidget;
+    NewCourier* pCourier;
+    NewDisc* pDisMusic;
 
     void initMediaPlay();
     void loadSong();
@@ -67,5 +75,11 @@ private:
     QMap<qint64, QString> loadLRC();
     void showLrc(qint64 position);
     QString getLyricsPath(const QString &musicPath);
+    void setListT1();
+    void setListT2();
+    void setListT3();
+    void setTabWidget();
+    void setPictureWall();
+    void setAddWidget();
 };
 #endif // MAINWINDOW_H
